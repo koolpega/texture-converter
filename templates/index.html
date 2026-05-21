@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Texture Converter</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @font-face { 
+            font-family: 'GFF-Bold'; 
+            src: url('https://dl.dir.freefiremobile.com/common/web_event/common/fonts/website/GFFLatinW05-Bold.woff') format('woff'); 
+        }
+        
+        :root { 
+            --ff-yellow: #ffde00; 
+            --ff-emerald: #00ffa3; 
+            --ff-red: #ff3e3e; 
+            --ff-cyan: #38bdf8;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body { 
+            background: #000; 
+            color: #fff; 
+            min-height: 100vh; 
+            background-image: url('https://dl.dir.freefiremobile.com/common/web_event/official2/dist/client/img/bg_pc.617c669.jpg'); 
+            background-size: cover; 
+            background-attachment: fixed; 
+            font-family: 'Inter', sans-serif; 
+            overflow-x: hidden; 
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        body::before { 
+            content: ""; 
+            position: fixed; 
+            inset: 0; 
+            background: rgba(0, 0, 0, 0.93); 
+            z-index: -1; 
+        }
+
+        .gff { 
+            font-family: 'GFF-Bold', sans-serif; 
+        }
+
+        /* Outer Panel Container */
+        .panel-container { 
+            background: #0a0a0a; 
+            border: 1px solid #1f1f1f; 
+            border-radius: 24px; 
+            padding: 24px; 
+            position: relative; 
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8);
+        }
+        
+        .panel-container::before { 
+            content: ""; 
+            position: absolute; 
+            top: 0; 
+            left: 0; 
+            width: 4px; 
+            height: 100%; 
+            background: var(--ff-yellow); 
+            border-radius: 24px 0 0 24px; 
+        }
+
+        /* True Mechanical Button Feel (Shadow remains locked) */
+        .btn-mechanical { 
+            cursor: pointer; 
+            font-family: 'GFF-Bold'; 
+            text-transform: uppercase; 
+            font-style: italic; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            border-radius: 16px; 
+            gap: 12px; 
+            position: relative;
+            background: var(--ff-yellow); 
+            color: #000; 
+            box-shadow: 0 5px 0 #c2a900;
+            transition: background 0.1s ease;
+        }
+        
+        .btn-mechanical:hover {
+            background: #ffe526;
+        }
+
+        .btn-mechanical:active { 
+            transform: translateY(2px);
+            box-shadow: 0 3px 0 #c2a900;
+        }
+
+        .upload-deck {
+            background: #121212;
+            border: 1px solid #2a2a2a;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            height: 110px;
+            cursor: pointer;
+            overflow: hidden;
+            transition: all 0.2s ease;
+        }
+
+        .upload-deck:hover {
+            border-color: #444;
+            background: #161616;
+        }
+
+        .deck-port {
+            width: 80px;
+            height: 100%;
+            background: #181818;
+            border-right: 1px solid #2a2a2a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .deck-port::after {
+            content: '';
+            position: absolute;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border: 1px dashed #333;
+            animation: spin 12s linear infinite;
+        }
+
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+
+        .deck-body {
+            flex: 1;
+            padding: 0 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        /* Custom Dropdown Interface Elements */
+        .dropdown {
+            position: relative;
+            width: 100%;
+        }
+
+        .dropdown-head {
+            height: 58px;
+            padding: 0 20px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #121212;
+            border: 1px solid #2a2a2a;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .dropdown-head:hover {
+            border-color: #444;
+            background: #161616;
+        }
+
+        .dropdown-text {
+            font-size: 14px;
+            font-weight: bold;
+            color: #fff;
+        }
+
+        .arrow {
+            width: 8px;
+            height: 8px;
+            border-right: 2px solid var(--ff-yellow);
+            border-bottom: 2px solid var(--ff-yellow);
+            transform: rotate(45deg);
+            transition: 0.25s ease;
+            margin-top: -3px;
+        }
+
+        .dropdown.active .arrow {
+            transform: rotate(225deg);
+            margin-top: 3px;
+        }
+
+        .dropdown-menu {
+            position: absolute;
+            top: 64px;
+            left: 0;
+            width: 100%;
+            background: #111111;
+            border: 1px solid #333;
+            border-radius: 16px;
+            overflow: hidden;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-8px);
+            transition: 0.2s ease;
+            z-index: 99;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.9);
+        }
+
+        .dropdown.active .dropdown-menu {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .dropdown-item {
+            padding: 14px 20px;
+            font-size: 13px;
+            cursor: pointer;
+            color: #e4e4e7;
+            transition: all 0.2s;
+            border-bottom: 1px solid #1f1f1f;
+        }
+        
+        .dropdown-item:last-child {
+            border-bottom: none;
+        }
+
+        .dropdown-item:hover {
+            background: var(--ff-yellow);
+            color: #000;
+        }
+
+        /* Status Window Display */
+        .status-window { 
+            background: #121212; 
+            border: 1px solid #2a2a2a; 
+            height: 64px; 
+            border-radius: 16px; 
+            display: flex; 
+            align-items: center; 
+            padding: 0 20px; 
+            gap: 15px; 
+        }
+        
+        .progress-bar-small { 
+            height: 4px; 
+            background: #1a1a1a; 
+            border-radius: 2px; 
+            flex: 1; 
+            overflow: hidden; 
+            position: relative; 
+        }
+        
+        .progress-fill-small { 
+            position: absolute; 
+            left: 0; top: 0; 
+            height: 100%; 
+            background: var(--ff-yellow); 
+            width: 0%; 
+            transition: 0.2s; 
+        }
+
+        /* Live Matrix Renderer Window box */
+        .live-render-box {
+            position: relative;
+            width: 100%;
+            border-radius: 16px;
+            background: #121212;
+            border: 1px solid #2a2a2a;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 220px;
+            overflow: hidden;
+        }
+
+        .live-render-box::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background-size: 4px 4px;
+            background-image: linear-gradient(to right, rgba(255,255,255,0.01) 1px, transparent 1px),
+                              linear-gradient(to bottom, rgba(255,255,255,0.01) 1px, transparent 1px);
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .preview-wrapper {
+            position: relative;
+            max-width: 100%;
+            max-height: 180px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2;
+        }
+
+        .pixel-scanner-line {
+            display: none;
+            position: absolute;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--ff-emerald), transparent);
+            box-shadow: 0 0 12px 2px var(--ff-emerald);
+            z-index: 10;
+            animation: hardwareScan 2s linear infinite;
+        }
+
+        @keyframes hardwareScan {
+            0% { top: 0%; }
+            50% { top: 100%; }
+            100% { top: 0%; }
+        }
+
+        .pixelated-render {
+            image-rendering: -moz-crisp-edges;
+            image-rendering: -webkit-crisp-edges;
+            image-rendering: pixelated;
+            image-rendering: crisp-edges;
+            border: 1px solid #333;
+            border-radius: 8px;
+            max-height: 170px;
+            object-fit: contain;
+            box-shadow: 0 0 20px rgba(0,0,0,0.8);
+        }
+
+        .loading-ring-container {
+            display: none;
+            position: relative;
+            width: 50px;
+            height: 50px;
+        }
+
+        .loading-ring-node {
+            position: absolute;
+            inset: 0;
+            border: 2px solid transparent;
+            border-top-color: var(--ff-emerald);
+            border-radius: 50%;
+            animation: spinning 1s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+        }
+        .loading-ring-node:nth-child(2) { animation-delay: -0.15s; border-top-color: var(--ff-yellow); }
+        .loading-ring-node:nth-child(3) { animation-delay: -0.3s; border-top-color: var(--ff-red); }
+
+        @keyframes spinning {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 16px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid #222;
+            margin-bottom: 20px;
+        }
+
+        .badge-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--ff-yellow);
+            box-shadow: 0 0 10px var(--ff-yellow);
+        }
+    </style>
+</head>
+<body>
+
+<header class="w-full flex justify-center items-center h-16 bg-black border-b-2 border-[#ffde00] sticky top-0 z-50">
+    <img src="https://dl.dir.freefiremobile.com/common/web_event/official2/dist/client/img/full_logo.969f536.png" class="h-7" alt="Logo">
+</header>
+
+<div class="w-full max-w-[480px] mx-auto px-4 pb-16">
+    
+    <div class="text-center my-10 gff">
+        <div class="flex justify-center">
+            <div class="badge">
+                <div class="badge-dot"></div>
+                <span class="text-[10px] uppercase tracking-widest font-bold text-zinc-400">KTX ⇆ PNG</span>
+            </div>
+        </div>
+        <span class="text-[54px] font-black italic block leading-[0.75]">TEXTURE</span>
+        <span class="text-[54px] font-black italic block text-[#ffde00] leading-[0.85]">CONVERTER</span>
+    </div>
+
+    <div class="panel-container space-y-5">
+        
+        <form id="converterForm" class="space-y-4">
+            
+            <div class="upload-deck" onclick="fileInput.click()">
+                <div class="deck-port">
+                    <i id="uploadIcon" class="fa-solid fa-cloud-arrow-up text-xl text-zinc-500 transition-colors"></i>
+                </div>
+                <div class="deck-body">
+                    <span id="fileStatusText" class="text-[9px] font-bold tracking-widest text-zinc-500 gff mb-1 uppercase">UPLOAD FILE</span>
+                    <p id="fileLabel" class="gff text-[12px] text-zinc-300 uppercase tracking-wide truncate">Click to Load File</p>
+                </div>
+            </div>
+            <input type="file" id="fileInput" class="hidden" required>
+
+            <div class="dropdown" id="modeDropdown">
+                <div class="dropdown-head" onclick="toggleDropdown()">
+                    <div class="dropdown-text gff uppercase tracking-wide" id="selectedModeText">KTX → PNG (Decompress)</div>
+                    <div class="arrow"></div>
+                </div>
+                <div class="dropdown-menu">
+                    <div class="dropdown-item gff uppercase tracking-wide" onclick="changeMode('ktx_to_png', 'KTX → PNG (Decompress)')">KTX → PNG (Decompress)</div>
+                    <div class="dropdown-item gff uppercase tracking-wide" onclick="changeMode('png_to_ktx', 'PNG → KTX (Compress)')">PNG → KTX (Compress)</div>
+                </div>
+            </div>
+            
+            <button type="submit" class="btn-mechanical w-full h-16 text-lg font-bold italic">
+                <i class="fa-solid fa-shuffle text-md"></i>
+                CONVERT TEXTURE
+            </button>
+        </form>
+
+                <div class="status-window">
+            <div id="statusIcon" class="w-5 h-5 flex items-center justify-center text-zinc-500">
+                <i class="fa-regular fa-image text-sm"></i>
+            </div>
+            <div class="flex flex-col flex-1 gap-1">
+                <span id="statusText" class="gff text-[9px] uppercase tracking-widest text-zinc-400">Output Window</span>
+                <div class="progress-bar-small"><div id="progressFill" class="progress-fill-small"></div></div>
+            </div>
+            <span id="statusBadge" class="text-[9px] font-black uppercase text-zinc-400 bg-zinc-900 px-2.5 py-1 rounded-md border border-zinc-800 gff tracking-wider">0x00</span>
+        </div>
+
+        <div class="live-render-box">
+            <div class="pixel-scanner-line" id="scannerLine"></div>
+
+            <div class="text-center space-y-2" id="outputEmptyState">
+                <i class="fa-solid fa-circle-nodes text-2xl text-zinc-800 animate-spin" style="animation-duration: 4s;"></i>
+                <div class="gff text-[10px] text-zinc-600 uppercase tracking-widest">Converted image will preview here</div>
+            </div>
+
+            <div class="loading-ring-container" id="outputLoader">
+                <div class="loading-ring-node"></div>
+                <div class="loading-ring-node"></div>
+                <div class="loading-ring-node"></div>
+            </div>
+
+            <div class="w-full hidden text-center space-y-4" id="outputResultView">
+                <div class="preview-wrapper">
+                    <img id="renderPreviewImg" class="pixelated-render" src="" alt="Texture Buffer Preview">
+                </div>
+                <div class="flex justify-center">
+                    <a id="fileDownloadAnchor" href="#" download class="btn-mechanical bg-zinc-900 hover:bg-zinc-800 text-white border border-zinc-800 text-[10px] tracking-widest px-6 h-12 uppercase">
+                        <i class="fa-solid fa-download text-xs text-emerald-400"></i> Export Live Output
+                    </a>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+</div>
+
+<script>
+    let extractionMode = "ktx_to_png";
+
+    function toggleDropdown() {
+        document.getElementById("modeDropdown").classList.toggle("active");
+    }
+
+    function changeMode(modeVal, labelText) {
+        extractionMode = modeVal;
+        document.getElementById("selectedModeText").innerText = labelText;
+        document.getElementById("modeDropdown").classList.remove("active");
+    }
+
+    document.addEventListener("click", function(event) {
+        const dropBox = document.getElementById("modeDropdown");
+        if (!dropBox.contains(event.target)) {
+            dropBox.classList.remove("active");
+        }
+    });
+
+    document.getElementById("fileInput").addEventListener("change", function() {
+        if(this.files[0]) {
+            const fileName = this.files[0].name.toUpperCase();
+            document.getElementById("fileLabel").innerText = fileName;
+            document.getElementById("fileLabel").style.color = "var(--ff-emerald)";
+            document.getElementById("uploadIcon").style.color = "var(--ff-emerald)";
+            
+            const statusLabel = document.getElementById("fileStatusText");
+            statusLabel.innerText = "ASSET LOADED";
+            statusLabel.style.color = "var(--ff-emerald)";
+        }
+    });
+
+    document.getElementById("converterForm").addEventListener("submit", async function(event) {
+        event.preventDefault();
+        const uploadedFile = document.getElementById("fileInput").files[0];
+        if(!uploadedFile) return;
+
+        document.getElementById("outputEmptyState").style.display = "none";
+        document.getElementById("outputResultView").classList.add("hidden");
+        document.getElementById("outputLoader").style.display = "block";
+        document.getElementById("scannerLine").style.display = "block";
+        
+        document.getElementById("statusBadge").innerText = "SYNC";
+        document.getElementById("statusBadge").style.color = "var(--ff-yellow)";
+        document.getElementById("statusText").innerText = "Parallel Sync Active...";
+        
+        // Spinning Microchip Animation Core
+        document.getElementById("statusIcon").innerHTML = `<i class="fa-regular fa-image text-sm animate-pulse text-yellow-500"></i>`;
+
+        let progressTracker = 0;
+        const progressFill = document.getElementById("progressFill");
+        
+        const trackingInterval = setInterval(() => {
+            progressTracker += 4;
+            progressFill.style.width = progressTracker + "%";
+            
+            if (progressTracker === 40) {
+                document.getElementById("statusText").innerText = "Extracting raw bitstream...";
+            }
+            if (progressTracker === 72) {
+                document.getElementById("statusText").innerText = "Writing structural maps...";
+            }
+
+            if (progressTracker >= 100) {
+                clearInterval(trackingInterval);
+                deliverRenderedOutput();
+            }
+        }, 100);
+
+        async function deliverRenderedOutput() {
+            const multiFormPayload = new FormData();
+            multiFormPayload.append("file", uploadedFile);
+            multiFormPayload.append("mode", extractionMode);
+
+            try {
+                const response = await fetch("/api/convert", {
+                    method: "POST",
+                    body: multiFormPayload
+                });
+                const responseData = await response.json();
+                
+                document.getElementById("outputLoader").style.display = "none";
+                document.getElementById("scannerLine").style.display = "none";
+
+                if(responseData.success) {
+                    document.getElementById("outputResultView").classList.remove("hidden");
+                    document.getElementById("renderPreviewImg").src = responseData.preview;
+                    document.getElementById("fileDownloadAnchor").href = responseData.download;
+
+                    document.getElementById("statusBadge").innerText = "SUCCESS";
+                    document.getElementById("statusBadge").style.color = "var(--ff-emerald)";
+                    document.getElementById("statusText").innerText = "Task Sync Complete";
+                    document.getElementById("statusIcon").innerHTML = `<i class="fa-solid fa-microchip text-base text-[#00ffa3]"></i>`;
+                } else {
+                    throw new Error("Engine fault");
+                }
+            } catch (exception) {
+                document.getElementById("outputLoader").style.display = "none";
+                document.getElementById("scannerLine").style.display = "none";
+                document.getElementById("outputEmptyState").style.display = "block";
+                
+                document.getElementById("statusBadge").innerText = "ERROR";
+                document.getElementById("statusBadge").style.color = "var(--ff-red)";
+                document.getElementById("statusText").innerText = "Engine thread failure";
+                document.getElementById("statusIcon").innerHTML = `<i class="fa-solid fa-microchip text-base text-[#ff3e3e]"></i>`;
+            } finally {
+                setTimeout(() => {
+                    progressFill.style.width = "0%";
+                }, 1000);
+            }
+        }
+    });
+</script>
+
+</body>
+</html>
